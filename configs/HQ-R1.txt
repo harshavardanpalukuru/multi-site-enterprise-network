@@ -55,7 +55,7 @@ interface GigabitEthernet0/1.40
  encapsulation dot1Q 40
  ip address 10.10.40.1 255.255.255.0
  ip helper-address 10.10.30.100
- ip access-group GUEST_RESTRICTIONS in
+ ip access-group GUEST_RESTRICTIONS_V2 in
 !
 interface GigabitEthernet0/2
  no ip address
@@ -80,9 +80,11 @@ ip route 0.0.0.0 0.0.0.0 10.255.0.2
 !
 ip flow-export version 9
 !
-ip access-list extended GUEST_RESTRICTIONS
+ip access-list extended GUEST_RESTRICTIONS_V2
  permit udp 10.10.40.0 0.0.0.255 host 10.10.30.100 eq domain
  permit tcp 10.10.40.0 0.0.0.255 host 10.10.30.100 eq domain
+ permit udp any eq bootpc any eq bootps
+ permit icmp 10.10.40.0 0.0.0.255 host 10.10.40.1
  deny ip 10.10.40.0 0.0.0.255 10.10.10.0 0.0.0.255
  deny ip 10.10.40.0 0.0.0.255 10.10.20.0 0.0.0.255
  deny ip 10.10.40.0 0.0.0.255 10.10.30.0 0.0.0.255
