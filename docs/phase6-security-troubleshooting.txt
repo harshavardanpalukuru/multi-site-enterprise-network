@@ -1,0 +1,79 @@
+Phase 6 — Security Configuration and Verification
+
+1. Guest VLAN Security
+   - ACL: GUEST_RESTRICTIONS
+   - Applied inbound on HQ-R1 G0/1.40
+   - DNS access to HQ-SRV1 verified
+   - Access to internal HQ and branch networks restricted
+   - Simulated external network access verified
+   - ACL counters checked
+
+2. Sales VLAN Security
+   - ACL: SALES_RESTRICTIONS
+   - Applied inbound on HQ-R1 G0/1.20
+   - DNS access to HQ-SRV1 verified
+   - Access to Management subnet restricted
+   - Simulated external network access verified
+   - ACL counters checked
+
+3. HQ-R1 Remote Administration
+   - Local administrator account: netadmin
+   - SSH version 2 enabled
+   - VTY lines use local authentication
+   - VTY lines accept SSH only
+   - SSH login tested successfully
+   - Privilege level 15 verified
+   - Enable secret configured
+
+4. Saved Configuration
+   - HQ-R1 configuration saved successfully
+   - Startup configuration inspected
+   - ACL definitions and interface assignments verified
+   - SSH and routing configuration verified
+
+Note:
+The external network is simulated using 203.0.113.0/24.
+
+5. BR-R1 Remote Administration
+   - Enable secret configured
+   - Local administrator account: netadmin
+   - RSA keys generated
+   - SSH version 2 enabled
+   - VTY lines require local authentication
+   - VTY lines accept SSH only
+   - SSH timeout: 60 seconds
+   - SSH login tested successfully from BR-USER-PC1
+   - Privilege level 15 verified
+   - Startup configuration inspected
+   - Saved SSH and VTY settings verified
+
+6. Additional Connectivity Verification
+   - IT VLAN to HQ-SRV1: 4/4 replies
+   - Management VLAN to HQ-SRV1: 4/4 replies
+   - Branch PC to HQ-SRV1: 4/4 replies
+   - Branch PC to EXT-SRV1: 4/4 replies on the second test
+   - EXT-SRV1 is part of the simulated external network
+
+7. Switch Security Verification
+
+HQ-SW1:
+- Port security verified on Fa0/1–Fa0/5
+- One secure MAC address reported per port
+- Zero security violations reported
+- Unused Fa0/6–Fa0/24 and Gi0/2 disabled in VLAN 999
+- SSH-only VTY configuration present in startup configuration
+
+BR-SW1:
+- Port security verified on Fa0/1–Fa0/2
+- One secure MAC address reported per port
+- Zero security violations reported
+- Unused Fa0/3–Fa0/24 and Gi0/2 disabled in VLAN 999
+- SSH-only VTY configuration present in startup configuration
+
+Note:
+Operational port-security output reported a maximum of one secure
+MAC address and Shutdown as the violation action. The startup
+configurations did not explicitly display the corresponding maximum
+and violation commands.
+
+Historical naming note: This Phase 6 record uses `GUEST_RESTRICTIONS`. The later Phase 9 troubleshooting log refers to `GUEST_RESTRICTIONS_V2`. Treat these as phase-specific names if the ACL was renamed between phases; verify against the configuration/evidence for the phase before changing either name.

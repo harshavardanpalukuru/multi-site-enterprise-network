@@ -1,0 +1,80 @@
+# Phase 7: GRE Tunnel Configuration and Verification
+
+## 1. Objective
+
+Configure a Generic Routing Encapsulation (GRE) tunnel between the headquarters router (HQ-R1) and branch router (BR-R1) in Cisco Packet Tracer, then verify tunnel endpoint connectivity.
+
+## 2. Tunnel Addressing
+
+| Setting                 | HQ-R1              | BR-R1              |
+| ----------------------- | ------------------ | ------------------ |
+| Tunnel interface        | Tunnel0            | Tunnel0            |
+| Tunnel IP address       | 10.255.0.9/30      | 10.255.0.10/30     |
+| Tunnel source interface | GigabitEthernet0/0 | GigabitEthernet0/0 |
+| Tunnel source IP        | 10.255.0.1         | 10.255.0.6         |
+| Tunnel destination      | 10.255.0.6         | 10.255.0.1         |
+| Encapsulation           | GRE over IPv4      | GRE over IPv4      |
+
+The tunnel subnet is 10.255.0.8/30.
+
+## 3. Configuration Summary
+
+Both routers were configured with a Tunnel0 interface, a tunnel IP address, GRE over IPv4 encapsulation, a remote tunnel destination, and a source interface.
+
+### HQ-R1
+
+* Tunnel IP: 10.255.0.9/30
+* Source: GigabitEthernet0/0 (10.255.0.1)
+* Destination: 10.255.0.6
+* Encapsulation: GRE over IPv4
+
+### BR-R1
+
+* Tunnel IP: 10.255.0.10/30
+* Source: GigabitEthernet0/0 (10.255.0.6)
+* Destination: 10.255.0.1
+* Encapsulation: GRE over IPv4
+
+Both router configurations were saved to startup configuration.
+
+## 4. Verification
+
+The following checks were performed:
+
+1. `show interfaces tunnel0` on HQ-R1 reported Tunnel0 as up/up, with IP address 10.255.0.9/30 and GRE/IP encapsulation.
+2. `show interfaces tunnel0` on BR-R1 reported Tunnel0 as up/up, with IP address 10.255.0.10/30 and GRE/IP encapsulation.
+3. BR-R1 pinged HQ-R1 tunnel IP 10.255.0.9. The first attempt achieved 60% success; a second attempt achieved 100% success (5/5).
+4. HQ-R1 pinged BR-R1 tunnel IP 10.255.0.10 with 100% success (5/5).
+5. Existing HQ-to-branch LAN connectivity was tested from HQ-IT-PC1 to 10.20.10.100 and succeeded with 0% packet loss.
+
+## 5. Routing Behavior
+
+The existing OSPF routing configuration was retained.
+
+* HQ-R1 routes to the branch LAN 10.20.10.0/24 through ISP-R1 at 10.255.0.2.
+* BR-R1 routes to HQ LANs through ISP-R1 at 10.255.0.5.
+* LAN-to-LAN traffic was not redirected through GRE.
+* The successful tunnel endpoint pings verify tunnel endpoint connectivity, but do not establish that site-to-site LAN traffic traverses the GRE tunnel.
+
+## 6. IPsec Limitation
+
+IPsec over IKEv1 was investigated but could not be configured using the available router CLI in this Packet Tracer project.
+
+The `crypto ?` and `show crypto ?` commands exposed only key-related options. The commands `crypto isakmp` and `crypto ipsec` were reported as unrecognized.
+
+GRE provides encapsulation but does not encrypt traffic. Therefore, this implementation must not be described as an encrypted IPsec VPN.
+
+## 7. Evidence Screenshots
+
+The following screenshots were saved in the project's `screenshots/` folder:
+
+* `phase7_hq_gre_tunnel.png`
+* `phase7_branch_gre_tunnel.png`
+* `phase7_gre_connectivity.png`
+* `phase7_gre_reverse_connectivity.png`
+
+## 8. Conclusion
+
+The GRE tunnel was configured on HQ-R1 and BR-R1, and endpoint connectivity was verified in both directions. The existing OSPF routing and LAN connectivity were preserved.
+
+The implementation demonstrates GRE tunneling only. Encryption and LAN traffic forwarding through GRE were not implemented or verified.

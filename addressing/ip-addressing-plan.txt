@@ -1,0 +1,62 @@
+# Multi-Site Enterprise Network — IP Addressing Plan
+
+## 1. Overview
+
+This document describes the IPv4 addressing scheme for the headquarters (HQ), branch office, and simulated ISP network.
+
+The design uses separate /24 subnets for LANs and /30 subnets for point-to-point WAN links.
+
+## 2. Subnet Addressing Table
+
+| Network                 | Network Address | Prefix | Subnet Mask     | Usable Host Range       | Broadcast Address | Default Gateway |
+| ----------------------- | --------------- | ------ | --------------- | ----------------------- | ----------------- | --------------- |
+| HQ IT — VLAN 10         | 10.10.10.0      | /24    | 255.255.255.0   | 10.10.10.1–10.10.10.254 | 10.10.10.255      | 10.10.10.1      |
+| HQ Sales — VLAN 20      | 10.10.20.0      | /24    | 255.255.255.0   | 10.10.20.1–10.10.20.254 | 10.10.20.255      | 10.10.20.1      |
+| HQ Management — VLAN 30 | 10.10.30.0      | /24    | 255.255.255.0   | 10.10.30.1–10.10.30.254 | 10.10.30.255      | 10.10.30.1      |
+| HQ Guest — VLAN 40      | 10.10.40.0      | /24    | 255.255.255.0   | 10.10.40.1–10.10.40.254 | 10.10.40.255      | 10.10.40.1      |
+| Branch LAN              | 10.20.10.0      | /24    | 255.255.255.0   | 10.20.10.1–10.20.10.254 | 10.20.10.255      | 10.20.10.1      |
+| HQ-to-ISP WAN           | 10.255.0.0      | /30    | 255.255.255.252 | 10.255.0.1–10.255.0.2   | 10.255.0.3        | N/A             |
+| ISP-to-Branch WAN       | 10.255.0.4      | /30    | 255.255.255.252 | 10.255.0.5–10.255.0.6   | 10.255.0.7        | N/A             |
+
+## 3. Device IP Addresses
+
+The workstation addresses in this table are **planned/example addresses**, not guaranteed current DHCP leases. The lab uses centralized DHCP, so a client may receive a different usable address in the same subnet during testing. Troubleshooting logs should record the address actually observed at the time of the test. The server and switch management addresses below are documented as configured addresses; verify them against the saved Packet Tracer configuration if changes are made.
+
+| Device              | IP Address   | Subnet Mask   | Default Gateway |
+| ------------------- | ------------ | ------------- | --------------- |
+| HQ-IT-PC1           | 10.10.10.11  | 255.255.255.0 | 10.10.10.1      |
+| HQ-SALES-PC1        | 10.10.20.11  | 255.255.255.0 | 10.10.20.1      |
+| HQ-MGMT-PC1         | 10.10.30.11  | 255.255.255.0 | 10.10.30.1      |
+| HQ-GUEST-PC1        | 10.10.40.11  | 255.255.255.0 | 10.10.40.1      |
+| HQ-SRV1             | 10.10.30.100 | 255.255.255.0 | 10.10.30.1      |
+| BR-USER-PC1         | 10.20.10.11  | 255.255.255.0 | 10.20.10.1      |
+| BR-USER-PC2         | 10.20.10.12  | 255.255.255.0 | 10.20.10.1      |
+| HQ-SW1 (management) | 10.10.30.2   | 255.255.255.0 | 10.10.30.1      |
+| BR-SW1 (management) | 10.20.10.2   | 255.255.255.0 | 10.20.10.1      |
+
+## 4. WAN Router Addresses
+
+| Device | Interface | IP Address |
+| ------ | --------- | ---------- |
+| HQ-R1  | G0/0      | 10.255.0.1 |
+| ISP-R1 | G0/0      | 10.255.0.2 |
+| ISP-R1 | G0/1      | 10.255.0.5 |
+| BR-R1  | G0/0      | 10.255.0.6 |
+
+HQ-R1 also uses subinterfaces G0/1.10, G0/1.20, G0/1.30, and G0/1.40 as the gateways for HQ VLANs 10, 20, 30, and 40, respectively.
+
+## 5. DHCP and Addressing Notes
+
+* Workstation IPs in Section 3 are planned/example values for documentation and should not be treated as fixed addresses when clients use DHCP.
+* Observed DHCP leases in troubleshooting logs may differ from the example workstation addresses while remaining in the correct subnet and using the correct gateway.
+* Record the actual current client address with `ipconfig /all` before running or documenting connectivity tests.
+* Do not change a client to a static address solely to match the example table unless the lab configuration specifically requires it.
+
+## 6. Design Notes
+
+* Each /24 LAN provides 254 usable IPv4 addresses.
+* Each /30 WAN link provides two usable IPv4 addresses.
+* Separate VLAN subnets support departmental segmentation and inter-VLAN routing.
+* The current Packet Tracer implementation retains the existing /24 LAN and /30 WAN allocations.
+* A separate VLSM exercise was considered as an alternative design; it is not implemented in the current topology.
+* Verify documented addresses against Packet Tracer configurations if the topology changes.

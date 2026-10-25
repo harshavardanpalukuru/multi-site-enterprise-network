@@ -1,0 +1,68 @@
+!
+! BR-R1 - Branch router configuration
+!
+version 15.1
+no service timestamps log datetime msec
+no service timestamps debug datetime msec
+no service password-encryption
+!
+hostname BR-R1
+!
+! Credentials and device-specific identifiers intentionally omitted.
+! Configure secure local credentials and regenerate RSA keys in your own lab.
+!
+ip cef
+no ipv6 cef
+!
+ip ssh version 2
+ip ssh time-out 60
+ip domain-name enterprise.local
+!
+spanning-tree mode pvst
+!
+interface Tunnel0
+ ip address 10.255.0.10 255.255.255.252
+ mtu 1476
+ tunnel source GigabitEthernet0/0
+ tunnel destination 10.255.0.1
+!
+interface GigabitEthernet0/0
+ ip address 10.255.0.6 255.255.255.252
+ duplex auto
+ speed auto
+!
+interface GigabitEthernet0/1
+ ip address 10.20.10.1 255.255.255.0
+ ip helper-address 10.10.30.100
+ duplex auto
+ speed auto
+!
+interface GigabitEthernet0/2
+ no ip address
+ duplex auto
+ speed auto
+ shutdown
+!
+interface Vlan1
+ no ip address
+ shutdown
+!
+router ospf 1
+ log-adjacency-changes
+ network 10.255.0.4 0.0.0.3 area 0
+ network 10.20.10.0 0.0.0.255 area 0
+!
+ip classless
+ip route 0.0.0.0 0.0.0.0 10.255.0.5
+!
+ip flow-export version 9
+!
+line con 0
+!
+line aux 0
+!
+line vty 0 4
+ login local
+ transport input ssh
+!
+end

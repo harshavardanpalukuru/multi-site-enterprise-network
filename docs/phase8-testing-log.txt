@@ -1,0 +1,149 @@
+# Phase 8: Comprehensive Testing Log
+
+## 1. Purpose
+
+This document records the comprehensive testing and verification performed on the multi-site enterprise network built in Cisco Packet Tracer.
+
+## 2. Connectivity Tests
+
+| Test                                     | Expected result      | Actual result              | Status                      |
+| ---------------------------------------- | -------------------- | -------------------------- | --------------------------- |
+| HQ IT PC to Branch PC                    | Successful ping      | 4/4 replies                | PASS                        |
+| Branch PC to HQ server                   | Successful ping      | 4/4 replies                | PASS                        |
+| HQ Management PC to HQ server            | Successful ping      | 4/4 replies                | PASS                        |
+| Branch PC to simulated external server   | Successful ping      | 4/4 replies on repeat test | PASS                        |
+| HQ Guest PC to HQ IT gateway             | Blocked by Guest ACL | 4/4 packets failed         | PASS — expected restriction |
+| HQ Guest PC to simulated external server | Successful ping      | 4/4 replies                | PASS                        |
+| HQ Sales PC to HQ Management switch IP   | Blocked by Sales ACL | 4/4 packets failed         | PASS — expected restriction |
+| HQ Sales PC to simulated external server | Successful ping      | 4/4 replies                | PASS                        |
+
+## 3. DHCP Verification
+
+* HQ IT PC received `10.10.10.101/24`.
+* HQ Sales PC received an address from the Sales DHCP pool.
+* HQ Management PC received `10.10.30.150/24`.
+* HQ Guest PC received an address from the Guest DHCP pool.
+* Branch PC1 received `10.20.10.100/24`.
+* Branch PC2 received `10.20.10.101/24`.
+* The clients' default gateways and DNS settings matched the addressing plan.
+* DHCP relay configuration was verified on HQ-R1 and BR-R1.
+
+Result: PASS based on the recorded client configurations and connectivity tests.
+
+Note: Client addresses listed above are the leases observed during Phase 8 testing. DHCP-assigned addresses may change between sessions; verify the current lease with `ipconfig /all` before reproducing a test.
+
+## 4. DNS Verification
+
+The hostname `hq-srv1.enterprise.local` successfully resolved to `10.10.30.100` from HQ IT, Sales, Guest, and Branch clients.
+
+Result: PASS.
+
+## 5. OSPF and Routing Verification
+
+* HQ-R1 and ISP-R1 formed an OSPF neighbor relationship in FULL state.
+* BR-R1 and ISP-R1 formed an OSPF neighbor relationship in FULL state.
+* Routing tables contained the expected HQ and Branch LAN routes.
+* HQ and Branch default routes pointed toward ISP-R1.
+* The simulated external network `203.0.113.0/24` was directly connected to ISP-R1.
+
+Result: PASS.
+
+## 6. NAT/PAT Verification
+
+* ISP-R1 G0/0 and G0/1 were configured as NAT inside interfaces.
+* ISP-R1 G0/2 was configured as the NAT outside interface.
+* PAT used access list 1 and the address of G0/2.
+* Access list 1 permitted all four HQ VLAN subnets and the Branch LAN subnet.
+* A fresh Branch-to-external ping generated PAT translation entries, translating the inside-local address `10.20.10.100` to the inside-global address `203.0.113.1`.
+
+Result: PASS.
+
+## 7. Security ACL Verification
+
+### Guest VLAN
+
+* DNS requests to HQ-SRV1 were allowed and hostname resolution succeeded.
+* Access to restricted internal networks was blocked.
+* Access to the simulated external server succeeded.
+* ACL counters showed matches on DNS permits, internal-network denies, and the external-network permit.
+
+### Sales VLAN
+
+* DNS hostname resolution succeeded.
+* Access to the Management subnet was blocked.
+* Access to the simulated external server succeeded.
+* ACL counters showed matches on the DNS permit, Management deny, and external-network permit.
+
+Result: PASS for the tested policies.
+
+## 8. SSH Verification
+
+* SSH access to HQ-R1 succeeded from HQ-MGMT-PC1.
+* SSH access to BR-R1 succeeded from BR-USER-PC1.
+* Privileged EXEC access was verified on both routers.
+* SSH version 2 and SSH-only VTY access were configured.
+
+Result: PASS.
+
+## 9. GRE Tunnel Verification
+
+* HQ-R1 Tunnel0: `10.255.0.9/30`, up/up.
+* BR-R1 Tunnel0: `10.255.0.10/30`, up/up.
+* GRE tunnel connectivity was verified by successful tunnel-endpoint pings.
+
+Result: PASS for GRE tunnel operation.
+
+Limitation: IPsec commands were unavailable in the Packet Tracer router CLI. GRE is not encrypted, and the existing LAN routes continue to use OSPF through ISP-R1 rather than routing LAN traffic through the GRE tunnel.
+
+## 10. Interface Verification
+
+### HQ-R1
+
+* G0/0: `10.255.0.1`, up/up.
+* G0/1.10: `10.10.10.1`, up/up.
+* G0/1.20: `10.10.20.1`, up/up.
+* G0/1.30: `10.10.30.1`, up/up.
+* G0/1.40: `10.10.40.1`, up/up.
+* Tunnel0: `10.255.0.9`, up/up.
+
+### BR-R1
+
+* G0/0: `10.255.0.6`, up/up.
+* G0/1: `10.20.10.1`, up/up.
+* Tunnel0: `10.255.0.10`, up/up.
+
+Result: PASS.
+
+## 11. DHCP Relay Verification
+
+* HQ IT, Sales, and Guest subinterfaces had `ip helper-address 10.10.30.100`.
+* HQ Management did not require a helper address because the DHCP server shares its subnet.
+* BR-R1 G0/1 had `ip helper-address 10.10.30.100`.
+
+Result: PASS.
+
+## 12. Evidence Screenshots
+
+Relevant screenshots are stored in the project's `screenshots/` directory. They include evidence for connectivity, DHCP, DNS, NAT/PAT, ACL counters and application, router interfaces, DHCP relay, OSPF, SSH, and GRE.
+
+Examples of recently saved evidence:
+
+* `phase8_hq_vlan_interfaces_verified.png`
+* `phase8_branch_interfaces_verified.png`
+* `phase8_sales_acl_application_verified.png`
+* `phase8_guest_acl_application_verified.png`
+* `phase8_nat_acl_networks_verified.png`
+* `phase8_nat_pat_translation_verified.png`
+* `phase8_hq_dhcp_relay_verified.png`
+* `phase8_branch_dhcp_relay_verified.png`
+* `phase8_gre_tunnel_connectivity_verified.png`
+* `phase8_hq_to_branch_connectivity_verified.png`
+* `phase8_branch_to_hq_connectivity_verified.png`
+
+## 13. Overall Summary
+
+The recorded tests support successful operation of the primary routed network, DHCP, DNS, NAT/PAT, SSH, security ACLs, and GRE tunnel endpoints.
+
+The external connectivity tests used a simulated external server in Packet Tracer, not the real Internet. GRE operation was verified, but encryption and routing of LAN traffic through the tunnel were not implemented.
+
+Phase 8 testing evidence is documented here. Any additional tests should be recorded with their actual results and corresponding evidence.

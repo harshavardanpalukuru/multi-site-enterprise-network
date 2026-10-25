@@ -1,0 +1,259 @@
+# Phase 9: Troubleshooting Log
+
+This log records troubleshooting exercises and controlled fault/recovery tests performed in Cisco Packet Tracer. Scenario 5 is intentionally omitted from this log.
+
+## Scenario 1: Diagnosing a Failed Ping to an Outdated IP Address
+
+### Objective
+Practice troubleshooting a failed ping by verifying the destination device's current IP address.
+
+### Initial Observation
+BR-USER-PC2 attempted to ping `10.10.10.101`, but all four requests timed out.
+
+### Diagnostic Steps
+1. Verified BR-USER-PC2's configuration using `ipconfig /all`.
+2. Confirmed the Branch PC had IPv4 address `10.20.10.100/24` and default gateway `10.20.10.1`.
+3. Successfully pinged the Branch gateway, `10.20.10.1`, with 0% packet loss.
+4. Successfully pinged the Branch router WAN address, `10.255.0.6`, with 0% packet loss.
+5. Checked HQ-IT-PC1 using `ipconfig /all`.
+6. Discovered that HQ-IT-PC1's current DHCP-assigned address was `10.10.10.100`, not the previously expected `10.10.10.101`.
+7. Retested connectivity to `10.10.10.100`. The initial attempt received three replies out of four; a subsequent test received four replies out of four.
+8. In the later controlled reproduction, pinging the stale address failed with 100% packet loss, while pinging the correct address succeeded with 4/4 replies.
+9. Confirmed that `nslookup hq-srv1.enterprise.local` from BR-USER-PC2 resolved successfully to `10.10.30.100`.
+
+### Root Cause
+The original ping targeted an outdated or incorrect destination IP address. HQ-IT-PC1's current address was `10.10.10.100`.
+
+### Resolution
+Used the verified current IP address for the connectivity test. No network configuration changes were required.
+
+### Evidence
+- `screenshots/phase9_scenario1_stale_ip_fault.png`
+- `screenshots/phase9_scenario1_stale_ip_recovery.png`
+
+### Conclusion and Status
+The exercise demonstrated that the destination's current address should be verified before diagnosing routing or connectivity. DHCP-assigned addresses can differ from previously recorded values. **Completed; fault and recovery evidence captured.**
+
+---
+
+## Scenario 2: Diagnosing an Incorrect DNS Server Address
+
+### Objective
+Distinguish DNS resolution failures from general IP connectivity failures.
+
+### Baseline
+BR-USER-PC2 successfully resolved `hq-srv1.enterprise.local` to `10.10.30.100` and could reach the DNS server by IP.
+
+### Fault Introduced
+Changed BR-USER-PC2 from DHCP to Static while preserving the branch address settings:
+- IPv4 address: `10.20.10.100`
+- Subnet mask: `255.255.255.0`
+- Default gateway: `10.20.10.1`
+- Incorrect DNS server: `10.10.30.200`
+
+### Observed Symptoms
+1. `nslookup hq-srv1.enterprise.local` timed out while querying `10.10.30.200`.
+2. `ping 10.10.30.100` succeeded with 0% packet loss, showing that IP connectivity to the actual server remained available.
+
+### Diagnosis
+The configured DNS server address was incorrect. The hostname-resolution failure occurred while direct IP connectivity to the actual DNS server remained operational.
+
+### Resolution
+Returned BR-USER-PC2 to DHCP. The client received:
+- IPv4 address: `10.20.10.102`
+- Subnet mask: `255.255.255.0`
+- Default gateway: `10.20.10.1`
+- DHCP server: `10.10.30.100`
+- DNS server: `10.10.30.100`
+
+Repeated `nslookup hq-srv1.enterprise.local`; the hostname resolved successfully to `10.10.30.100`.
+
+### Evidence
+- `screenshots/phase9_scenario2_wrong_dns_fault.png`
+- `screenshots/phase9_scenario2_ip_connectivity_during_dns_fault.png`
+- `screenshots/phase9_scenario2_wrong_dns_recovery.png`
+
+### Conclusion and Status
+An incorrect DNS server address can prevent hostname resolution even when direct IP connectivity works. The intended DHCP configuration and DNS resolution were restored. **Completed; fault and recovery evidence captured.**
+
+---
+
+## Scenario 3: Verifying Routing Between Branch and HQ
+
+### Objective
+Use routing tables, OSPF neighbor status, and connectivity tests to verify routing between sites.
+
+### Diagnostic Steps and Findings
+1. On BR-R1, `show ip route ospf` showed OSPF routes to HQ LANs, including `10.10.10.0/24`, `10.10.20.0/24`, `10.10.30.0/24`, and `10.10.40.0/24`, through ISP-R1 at `10.255.0.5`.
+2. The OSPF neighbor at `10.255.0.5` was in the `FULL/DR` state on GigabitEthernet0/0.
+3. Confirmed the Branch default route pointed to `10.255.0.5`.
+4. A traceroute to the HQ IT gateway `10.10.10.1` showed the path through ISP-R1 (`10.255.0.5`) and then HQ-R1 (`10.255.0.1`).
+5. BR-USER-PC2 successfully pinged HQ-IT-PC1 at `10.10.10.100` with 4/4 replies and 0% packet loss.
+
+### Root Cause and Resolution
+No routing fault was identified during this verification exercise. No configuration changes were required.
+
+### Evidence
+- `screenshots/phase9_scenario3_ospf_routes.png`
+- `screenshots/phase9_scenario3_branch_to_hq_connectivity.png`
+- `screenshots/phase9_scenario3_ospf_neighbor.png`
+
+### Conclusion and Status
+The routing table, OSPF neighbor state, and end-to-end ping confirmed operational routing between the Branch and HQ. **Verification completed.**
+
+---
+
+## Scenario 4: Guest VLAN DHCP Failure Caused by an ACL
+
+### Objective
+Reproduce and troubleshoot a DHCP failure caused by an ACL that does not permit DHCP client requests.
+
+### Investigation and Root Cause
+The active inbound ACL on HQ-R1 `GigabitEthernet0/1.40` was `GUEST_RESTRICTIONS_V2`, with DHCP relay configured to `10.10.30.100`. Temporarily removing the DHCP permit from this ACL caused HQ-GUEST-PC1's DHCP request to fail. The missing permit meant DHCP traffic was blocked by the ACL's implicit deny.
+
+### Fault Introduced
+Removed sequence 10 from `GUEST_RESTRICTIONS_V2`:
+`no 10`
+
+### Resolution
+Restored the DHCP permit:
+`10 permit udp any eq bootpc any eq bootps`
+
+After restoration, HQ-GUEST-PC1 successfully obtained a DHCP address again.
+
+### Evidence
+- `screenshots/phase9_scenario4_acl_fault_config.png`
+- `screenshots/phase9_scenario4_acl_dhcp_fault.png`
+- `screenshots/phase9_scenario4_acl_dhcp_recovery.png`
+
+### Conclusion and Status
+The DHCP failure was reproduced by removing the DHCP permit and resolved by restoring it. **Fault and recovery verified.**
+
+---
+
+## Scenario 6: OSPF Routing Failure — Missing Branch LAN Advertisement
+
+### Objective
+Simulate and troubleshoot an OSPF routing failure between HQ and the Branch site.
+
+### Baseline
+BR-R1's OSPF process included:
+- `network 10.255.0.4 0.0.0.3 area 0`
+- `network 10.20.10.0 0.0.0.255 area 0`
+
+### Fault Introduced
+Temporarily removed the Branch LAN network statement from BR-R1:
+`no network 10.20.10.0 0.0.0.255 area 0`
+
+HQ-R1 then reported `% Subnet not in table` for `10.20.10.0`. The OSPF neighbor relationship remained FULL, showing that an active neighbor alone does not prove all expected LANs are advertised. During diagnosis, `show ip protocols` also confirmed that the Branch LAN network statement was missing, while BR-R1 retained its directly connected route to `10.20.10.0/24`.
+
+### Resolution
+Restored the Branch LAN advertisement on BR-R1:
+`network 10.20.10.0 0.0.0.255 area 0`
+
+### Verification
+- HQ-R1 relearned `10.20.10.0/24` through OSPF, with next hop `10.255.0.2`.
+- HQ-IT-PC1 successfully pinged Branch PC `10.20.10.101` with 4/4 replies and 0% packet loss.
+
+### Evidence
+- `screenshots/phase9_scenario6_ospf_baseline.png`
+- `screenshots/phase9_scenario6_ospf_fault.png`
+- `screenshots/phase9_scenario6_ospf_recovery.png`
+- `screenshots/phase9_scenario6_ospf_connectivity_recovery.png`
+
+### Lesson and Status
+Verify both OSPF neighbor status and routing-table contents. A neighbor can remain FULL while a LAN network is no longer advertised. **Fault introduced, configuration restored, and connectivity verified.**
+
+---
+
+## Scenario 7: NAT/PAT Troubleshooting
+
+### Objective
+Verify PAT operation, make a controlled configuration change, and record actual connectivity and translation behavior.
+
+### Baseline
+- HQ-IT-PC1 (`10.10.10.100`) pinged the simulated external server `203.0.113.10` with 4/4 replies and 0% packet loss.
+- After generating ping traffic, ISP-R1 showed ICMP PAT translations from inside local `10.10.10.100` to inside global `203.0.113.1`.
+- The PAT rule was:
+  `ip nat inside source list 1 interface GigabitEthernet0/2 overload`
+
+### Fault Introduced
+Temporarily removed the PAT rule on ISP-R1:
+`no ip nat inside source list 1 interface GigabitEthernet0/2 overload`
+
+### Observed Result
+- The PAT rule was absent from the running configuration.
+- The NAT translation table was empty when checked after the rule was removed.
+- HQ-IT-PC1 still pinged `203.0.113.10` successfully with 4/4 replies and 0% packet loss.
+- The expected connectivity failure was **not** reproduced. The reason for continued ping success was not established, so no unsupported explanation is asserted.
+
+### Restoration and Verification
+Restored the PAT rule:
+`ip nat inside source list 1 interface GigabitEthernet0/2 overload`
+
+Verified that the rule appeared in the running configuration again. After restoration, HQ-IT-PC1 again pinged `203.0.113.10` with 4/4 replies and 0% packet loss. NAT translations were observed again after traffic was generated.
+
+### Evidence
+- `screenshots/phase9_scenario7_pat_baseline.png`
+- `screenshots/phase9_scenario7_pat_connectivity_baseline.png`
+- `screenshots/phase9_scenario7_pat_translations_baseline.png`
+- `screenshots/phase9_scenario7_pat_fault_config.png`
+- `screenshots/phase9_scenario7_pat_translations_fault.png`
+- `screenshots/phase9_scenario7_pat_recovery_config.png`
+- `screenshots/phase9_scenario7_pat_translations_recovery.png`
+
+### Lesson and Status
+Verify actual connectivity and NAT translations rather than assuming a configuration change produces the expected result. In this Packet Tracer test, removing the PAT rule did not interrupt the observed ping, so the result is inconclusive regarding the expected outage. **Baseline verified, controlled change performed, PAT rule restored, and post-restoration connectivity verified.**
+
+---
+
+## Scenario 8: DHCP Relay Failure and Recovery
+
+### Objective
+Identify and recover from a DHCP failure caused by a missing DHCP relay configuration on the branch router.
+
+### Baseline
+BR-R1 `GigabitEthernet0/1` had:
+`ip helper-address 10.10.30.100`
+
+BR-USER-PC1's baseline configuration was recorded as:
+- IPv4 address: `10.20.10.101`
+- Subnet mask: `255.255.255.0`
+- Default gateway: `10.20.10.1`
+- DHCP server: `10.10.30.100`
+- DNS server: `10.10.30.100`
+
+### Fault Introduced
+Removed the DHCP relay configuration from BR-R1 `GigabitEthernet0/1`:
+`no ip helper-address 10.10.30.100`
+
+BR-USER-PC1's DHCP request failed while the helper address was absent.
+
+### Root Cause
+BR-R1 was no longer forwarding DHCP requests from the branch LAN to the DHCP server on the HQ network.
+
+### Recovery
+Restored the relay configuration:
+`ip helper-address 10.10.30.100`
+
+Then selected DHCP again on BR-USER-PC1 under Desktop > IP Configuration. The DHCP request succeeded.
+
+### Evidence
+- `screenshots/phase9_scenario8_dhcp_relay_baseline.png`
+- `screenshots/phase9_scenario8_dhcp_relay_fault_config.png`
+- `screenshots/phase9_scenario8_dhcp_relay_client_fault.png`
+- `screenshots/phase9_scenario8_dhcp_relay_recovery_config.png`
+- `screenshots/phase9_scenario8_dhcp_relay_client_recovery.png`
+
+### Conclusion and Status
+Restoring `ip helper-address 10.10.30.100` on BR-R1 `GigabitEthernet0/1` restored DHCP service to the branch PC. **Fault and recovery verified.**
+
+---
+
+## Evidence and Configuration Notes
+
+- Scenario 5 is intentionally omitted.
+- Screenshot paths above are relative to the project folder and assume the referenced evidence files are present in `multi-site-enterprise-network/screenshots/`.
+- The recent controlled fault tests changed the running Packet Tracer configuration temporarily and then restored the relevant settings. The project was not intentionally saved during these fault tests.
+- The simulated external server at `203.0.113.10` represents the Packet Tracer external network; it is not a real Internet connection.
+- The GRE tunnel configured in this project is not IPsec encryption and is not being used to carry the LAN routes.

@@ -1,0 +1,35 @@
+# Phase 4: Routing Troubleshooting
+
+## Issue
+
+Static routes to internal networks were taking precedence over OSPF-learned routes in the routing tables.
+
+## Symptoms
+
+The routers had OSPF neighbors, but some internal LAN routes appeared as static routes rather than OSPF routes.
+
+## Diagnostic Commands
+
+* `show ip route`
+* `show ip ospf neighbor`
+* `show ip ospf database`
+
+## Root Cause
+
+Static routes have an administrative distance of 1, while OSPF routes have an administrative distance of 110. When both supplied a route to the same destination, the routers preferred the static routes.
+
+## Resolution
+
+Removed redundant static routes to internal LAN networks on HQ-R1, ISP-R1, and BR-R1. Retained the default routes on HQ-R1 and BR-R1.
+
+## Verification
+
+The routing tables subsequently showed OSPF-learned routes for the remote internal LANs. OSPF neighbors were in the FULL state. Connectivity tests were performed between HQ and branch devices and between HQ devices and the server.
+
+## Prevention
+
+Avoid configuring redundant static routes for destinations that are intended to be learned dynamically through OSPF. After changing routing configuration, inspect the routing table and verify both OSPF neighbor states and end-to-end connectivity.
+
+## Evidence
+
+Refer to the Phase 4 routing-table, OSPF-neighbor, and ping-test screenshots in the project's `screenshots` directory.
