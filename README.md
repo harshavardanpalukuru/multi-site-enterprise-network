@@ -63,7 +63,7 @@ The project was built and documented in stages, moving from network design and c
 | Phase 6 | Security and administration | Applied Guest and Sales ACLs, configured SSH administration, and verified switch port security. See [`docs/phase6-security-troubleshooting.txt`](docs/phase6-security-troubleshooting.txt). |
 | Phase 7 | GRE tunnel | Configured and tested GRE tunnel endpoint connectivity. The tunnel is not IPsec-encrypted and does not carry LAN routes in this implementation. See [`docs/phase7-gre-tunnel.txt`](docs/phase7-gre-tunnel.txt). |
 | Phase 8 | Comprehensive testing | Recorded connectivity, DHCP, DNS, routing, NAT/PAT, ACL, SSH, interface, relay, and GRE checks. See [`docs/phase8-testing-log.txt`](docs/phase8-testing-log.txt). |
-| Phase 9 | Troubleshooting and recovery | Documented controlled fault-and-recovery exercises for addressing, DNS, Guest ACL DHCP, OSPF advertisement, NAT/PAT, and DHCP relay. Scenario 5 was intentionally omitted. See [`docs/phase9-troubleshooting-log.txt`](docs/phase9-troubleshooting-log.txt). |
+| Phase 9 | Troubleshooting and recovery | Documented controlled fault-and-recovery exercises for addressing, DNS, Guest ACL DHCP, OSPF advertisement, NAT/PAT, and DHCP relay. Scenario 5 was intentionally omitted. See [`docs/phase9-troubleshooting-log.txt`](docs/phase9-troubleshooting-log.txt).
 The phases describe the project workflow; the individual logs and screenshots provide the detailed evidence and recorded results. Phase 5 is summarized from the network-services implementation described in this README; a separate Phase 5 document is not currently listed in the repository.
 
 ## Key design and addressing
