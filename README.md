@@ -162,8 +162,6 @@ I reproduced faults, observed symptoms, restored configuration, and verified rec
 
 - **Missing DHCP relay:** Removing `ip helper-address` caused the branch DHCP request to fail; restoring it recovered DHCP.
 
-- **NAT/PAT controlled test:** The PAT rule was removed and the translation table was empty when checked, but the external ping still succeeded. The reason was not established, so this is recorded as an inconclusive outage test rather than a demonstrated connectivity failure.
-
 The complete troubleshooting record is in [`docs/phase9-troubleshooting-log.txt`](docs/phase9-troubleshooting-log.txt). Scenario 5 was intentionally excluded.
 
 ## Evidence Gallery
