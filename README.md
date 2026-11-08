@@ -145,7 +145,8 @@ The project includes test records for the following:
 | ACLs | Guest DHCP and protected-network access checks | DHCP failure/recovery reproduced; restrictions tested |
 | NAT/PAT | Ping to `203.0.113.10` and `show ip nat translations` | Translations observed when PAT was active |
 | SSH | Remote device management | SSH access tested |
-| GRE | Tunnel status and endpoint ping | Tunnel up/up and reachability verified |
+| GRE | Tunnel status and endpoint ping | Tunnel up/up and reachability verified 
+
 See [`docs/phase8-testing-log.txt`](docs/phase8-testing-log.txt) for the detailed verification log.
 
 ## Troubleshooting highlights
