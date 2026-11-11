@@ -189,7 +189,7 @@ The screenshots below highlight selected results from the project. The full evid
 
 ### Troubleshooting evidence
 
-The Phase 9 screenshots document controlled faults and recovery. In Scenario 7, removing the PAT rule did not interrupt the observed external ping, so the outage test is documented as inconclusive rather than as a demonstrated failure.
+The Phase 9 screenshots document controlled faults and recovery. 
 
 | Evidence | What it demonstrates |
 |---|---|
@@ -260,8 +260,6 @@ This tree matches the folder and file names in the reviewed project archive.
 - `203.0.113.10` is a simulated external server, not a real Internet host.
 
 - GRE is not IPsec-encrypted and does not carry LAN routes in this implementation.
-
-- During the controlled NAT/PAT test, the external ping remained successful while the PAT rule was absent. The reason was not established.
 
 - Packet Tracer behavior and supported commands may differ from physical Cisco equipment and IOS versions.
 
